@@ -8,11 +8,19 @@ permissions:
   contents: write
   pull-requests: write
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+
       - name: Run Release Please
         id: release
         uses: googleapis/release-please-action@v4
@@ -43,13 +51,10 @@ jobs:
       - name: Test
         run: mage test
 
-      - name: Build
-        run: mage build
-
-      - name: Run GoReleaser (attach artifacts to the release)
+      - name: Run GoReleaser (attach artifacts to the Release)
         uses: goreleaser/goreleaser-action@v6
         with:
           version: latest
           args: release --clean
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
