@@ -5,21 +5,30 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ake3mio/go-todo-cli/internal/persistence"
 	"github.com/ake3mio/go-todo-cli/internal/tui"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
 	"github.com/stretchr/testify/assert"
 )
 
+type TestTodoRepository struct{}
+
+func (t *TestTodoRepository) SaveTask(task string, dueDate time.Time) error {
+	return nil
+}
+
 func TestModel_InitialState(t *testing.T) {
-	m := createModel()
+	var repository persistence.TodoRepository = &TestTodoRepository{}
+	m := createModel(&repository)
 	assert.Equal(t, "Add Task", m.message)
 	assert.Equal(t, "", m.taskName)
 	assert.Equal(t, "", m.dueDate)
 }
 
 func TestModel_Update_KeyExit(t *testing.T) {
-	m := createModel()
+	var repository persistence.TodoRepository = &TestTodoRepository{}
+	m := createModel(&repository)
 
 	for _, key := range tui.QuitKeys {
 		msg, cmd := sendKeyMsg(key, m)
@@ -27,7 +36,7 @@ func TestModel_Update_KeyExit(t *testing.T) {
 		assert.NotEqual(t, m, msg)
 		assert.Equal(t, tea.Quit(), cmd())
 		assert.True(t, msg.(model).quitting)
-		m = createModel()
+		m = createModel(&repository)
 	}
 
 	update, cmd := sendKeyMsg("a", m)
@@ -37,7 +46,8 @@ func TestModel_Update_KeyExit(t *testing.T) {
 }
 
 func TestModel_Update_Error(t *testing.T) {
-	m := createModel()
+	var repository persistence.TodoRepository = &TestTodoRepository{}
+	m := createModel(&repository)
 
 	err := errors.New("error")
 	update, cmd := m.Update(err)
@@ -48,7 +58,8 @@ func TestModel_Update_Error(t *testing.T) {
 }
 
 func TestModel_Update_Default(t *testing.T) {
-	m := createModel()
+	var repository persistence.TodoRepository = &TestTodoRepository{}
+	m := createModel(&repository)
 
 	update, cmd := m.Update(struct{}{})
 	assert.Equal(t, m, update)
@@ -56,13 +67,15 @@ func TestModel_Update_Default(t *testing.T) {
 }
 
 func TestModel_Init_ReturnsCmd(t *testing.T) {
-	m := createModel()
+	var repository persistence.TodoRepository = &TestTodoRepository{}
+	m := createModel(&repository)
 	cmd := m.Init()
 	assert.NotNil(t, cmd, "Init should return a non-nil tea.Cmd from the form")
 }
 
 func TestModel_Update_FormCompleted_Quits(t *testing.T) {
-	m := createModel()
+	var repository persistence.TodoRepository = &TestTodoRepository{}
+	m := createModel(&repository)
 
 	m.form.State = huh.StateCompleted
 
@@ -76,7 +89,8 @@ func TestModel_Update_FormCompleted_Quits(t *testing.T) {
 }
 
 func TestModel_Update_FormAborted_Quits(t *testing.T) {
-	m := createModel()
+	var repository persistence.TodoRepository = &TestTodoRepository{}
+	m := createModel(&repository)
 	m.form.State = huh.StateAborted
 
 	next, cmd := m.Update(struct{}{})
@@ -85,7 +99,8 @@ func TestModel_Update_FormAborted_Quits(t *testing.T) {
 }
 
 func TestModel_Quit_ValueSemantics(t *testing.T) {
-	m := createModel()
+	var repository persistence.TodoRepository = &TestTodoRepository{}
+	m := createModel(&repository)
 	assert.False(t, m.quitting)
 
 	m2 := m.Quit().(model)
@@ -94,7 +109,8 @@ func TestModel_Quit_ValueSemantics(t *testing.T) {
 }
 
 func TestModel_View_RendersFormTitles(t *testing.T) {
-	var m model = createModel()
+	var repository persistence.TodoRepository = &TestTodoRepository{}
+	m := createModel(&repository)
 	if cmd := m.Init(); cmd != nil {
 		if msg := cmd(); msg != nil {
 			nm, _ := m.Update(msg)
@@ -132,7 +148,8 @@ func TestIsDateBeforeToday(t *testing.T) {
 }
 
 func TestModel_Update_ErrorSetsErr(t *testing.T) {
-	m := createModel()
+	var repository persistence.TodoRepository = &TestTodoRepository{}
+	m := createModel(&repository)
 	want := errors.New("boom")
 	next, cmd := m.Update(want)
 	got := next.(model)

@@ -4,18 +4,20 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ake3mio/go-todo-cli/internal/persistence"
 	"github.com/ake3mio/go-todo-cli/internal/tui"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
 )
 
 type model struct {
-	form     *huh.Form
-	message  string
-	taskName string
-	dueDate  string
-	quitting bool
-	err      error
+	form       *huh.Form
+	repository *persistence.TodoRepository
+	message    string
+	taskName   string
+	dueDate    string
+	quitting   bool
+	err        error
 }
 
 func (m model) Init() tea.Cmd {
@@ -47,6 +49,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if m.form.State == huh.StateCompleted {
 		m.taskName = m.form.GetString("taskName")
 		m.dueDate = m.form.GetString("dueDate")
+		parse, err := time.Parse(time.DateOnly, m.dueDate)
+		if err != nil {
+			m.err = err
+		}
+		err = (*m.repository).SaveTask(m.taskName, parse)
+		if err != nil {
+			m.err = err
+		}
 		return m.Quit(), tea.Quit
 	}
 
@@ -75,13 +85,14 @@ func (m model) Err() error {
 	return m.err
 }
 
-func createModel() model {
+func createModel(repository *persistence.TodoRepository) model {
 	f := createNewTaskForm()
 	return model{
-		form:     f,
-		message:  "Add Task",
-		taskName: "",
-		dueDate:  "",
+		form:       f,
+		repository: repository,
+		message:    "Add Task",
+		taskName:   "",
+		dueDate:    "",
 	}
 }
 
