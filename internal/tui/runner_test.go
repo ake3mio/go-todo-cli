@@ -1,4 +1,4 @@
-package loader
+package tui
 
 import (
 	"bytes"
@@ -16,7 +16,7 @@ type testModel struct{}
 func (testModel) Init() tea.Cmd { return nil }
 func (testModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg.(type) {
-	case doneMsg:
+	case DoneMsg:
 		return testModel{}, tea.Quit
 	default:
 		return testModel{}, nil
@@ -24,13 +24,13 @@ func (testModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 func (testModel) View() string { return "" }
 
-func newTestLoader(m tea.Model) *Loader {
+func newTestLoader(m tea.Model) *Runner {
 	p := tea.NewProgram(
 		m,
 		tea.WithInput(bytes.NewBuffer(nil)),
 		tea.WithOutput(io.Discard),
 	)
-	ldr := &Loader{
+	ldr := &Runner{
 		program: p,
 		doneCh:  make(chan struct{}),
 	}
@@ -42,7 +42,7 @@ func newTestLoader(m tea.Model) *Loader {
 	return ldr
 }
 
-func waitOrFail(t *testing.T, l *Loader, d time.Duration) error {
+func waitOrFail(t *testing.T, l *Runner, d time.Duration) error {
 	t.Helper()
 	done := make(chan error, 1)
 	go func() {
@@ -68,7 +68,7 @@ func TestClose_Idempotent(t *testing.T) {
 }
 
 func TestWait_PropagatesRunErr(t *testing.T) {
-	ldr := &Loader{
+	ldr := &Runner{
 		doneCh: make(chan struct{}),
 	}
 	want := errors.New("boom")

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/ake3mio/go-todo-cli/internal/tui"
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/stretchr/testify/assert"
@@ -13,13 +14,13 @@ func TestModel_InitialState(t *testing.T) {
 	m := createModel()
 	assert.Equal(t, m.spinner.Spinner, spinner.Globe)
 	assert.Equal(t, m.message, "Loading tasks...")
-	assert.Equal(t, m.quitKeys, []string{"q", "esc", "ctrl+c"})
+	assert.Equal(t, tui.QuitKeys, []string{"q", "esc", "ctrl+c"})
 }
 
 func TestModel_Update_KeyExit(t *testing.T) {
 	m := createModel()
 
-	for _, key := range m.quitKeys {
+	for _, key := range tui.QuitKeys {
 		update, cmd := sendKeyMsg(key, m)
 
 		assert.NotEqual(t, m, update)
@@ -33,14 +34,12 @@ func TestModel_Update_KeyExit(t *testing.T) {
 	assert.Equal(t, m, update)
 	assert.Nil(t, cmd)
 	assert.False(t, update.(model).quitting)
-
-	m = createModel()
 }
 
 func TestModel_Update_DoneMsg(t *testing.T) {
 	m := createModel()
 
-	update, cmd := m.Update(doneMsg{})
+	update, cmd := m.Update(tui.DoneMsg{})
 
 	assert.Equal(t, m, update)
 	assert.Equal(t, tea.Quit(), cmd())
