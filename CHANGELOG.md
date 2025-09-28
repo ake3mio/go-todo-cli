@@ -11,7 +11,6 @@
 ### Bug Fixes
 
 * Change executable name to todo ([34eec4c](https://github.com/ake3mio/go-todo-cli/commit/34eec4c42fe438a6b86cad9e5611646817a84a31))
-* Change executable name to todo ([3b4bfde](https://github.com/ake3mio/go-todo-cli/commit/3b4bfde7ee9ec0c964403e3b0482b19ad906adea))
 
 ## 1.0.0 (2025-09-28)
 
