@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.1.0](https://github.com/ake3mio/go-todo-cli/compare/v1.0.0...v1.1.0) (2025-09-28)
+
+
+### Features
+
+* add task persistence ([#9](https://github.com/ake3mio/go-todo-cli/issues/9)) ([0c7df8d](https://github.com/ake3mio/go-todo-cli/commit/0c7df8d7462267c4c053cde250ad9768de3e663a))
+
+
+### Bug Fixes
+
+* Change executable name to todo ([34eec4c](https://github.com/ake3mio/go-todo-cli/commit/34eec4c42fe438a6b86cad9e5611646817a84a31))
+* Change executable name to todo ([3b4bfde](https://github.com/ake3mio/go-todo-cli/commit/3b4bfde7ee9ec0c964403e3b0482b19ad906adea))
+
 ## 1.0.0 (2025-09-28)
 
 
