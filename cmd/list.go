@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"fmt"
-
+	"github.com/ake3mio/go-todo-cli/internal/persistence"
+	"github.com/ake3mio/go-todo-cli/internal/tui/list"
 	"github.com/spf13/cobra"
 )
 
@@ -11,7 +11,10 @@ var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List all todos",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("list called")
+		repository := persistence.NewTodoRepository()
+		newList := list.NewList(repository)
+		defer newList.Close()
+		newList.Wait()
 	},
 }
 
