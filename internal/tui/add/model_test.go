@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ake3mio/go-todo-cli/internal/data"
 	"github.com/ake3mio/go-todo-cli/internal/persistence"
 	"github.com/ake3mio/go-todo-cli/internal/tui"
 	tea "github.com/charmbracelet/bubbletea"
@@ -17,7 +18,10 @@ type TestTodoRepository struct{}
 func (t *TestTodoRepository) SaveTask(task string, dueDate time.Time) error {
 	return nil
 }
-
+func (t *TestTodoRepository) GetTasks() ([]data.Task, error)      { return []data.Task{}, nil }
+func (t *TestTodoRepository) UpdateTask(task data.Task) error     { return nil }
+func (t *TestTodoRepository) UpdateTasks(tasks []data.Task) error { return nil }
+func (t *TestTodoRepository) DeleteTaskById(id int) error         { return nil }
 func TestModel_InitialState(t *testing.T) {
 	var repository persistence.TodoRepository = &TestTodoRepository{}
 	m := createModel(&repository)
