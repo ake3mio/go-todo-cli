@@ -15,7 +15,7 @@ func mustNewRepo(t *testing.T) *TodoRepository {
 	t.Setenv("TODO_DB", filepath.Join(tmp, "todo.sqlite"))
 	repo := NewTodoRepository()
 	assert.NotNil(t, repo)
-	return repo
+	return &repo
 }
 
 func cleanup(repo *TodoRepository) {

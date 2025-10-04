@@ -7,6 +7,7 @@ import (
 	"github.com/ake3mio/go-todo-cli/internal/tui"
 )
 
-func NewAdd(repository *persistence.TodoRepository) *tui.Runner {
-	return tui.NewRunner(context.Background(), createModel(repository))
+func NewAdd(repository persistence.TodoRepository) *tui.Runner {
+	var model tui.Model = createModel(repository)
+	return tui.NewRunner(context.Background(), model)
 }

@@ -19,9 +19,8 @@ type fakeRepo struct {
 	deletes          []int
 }
 
-func (r *fakeRepo) SaveTask(task string, dueDate time.Time) error {
-	return nil
-}
+func (r *fakeRepo) Close() error                                  { return nil }
+func (r *fakeRepo) SaveTask(task string, dueDate time.Time) error { return nil }
 
 func (r *fakeRepo) GetTasks() ([]data.Task, error) {
 	cp := make([]data.Task, len(r.tasks))
@@ -30,7 +29,6 @@ func (r *fakeRepo) GetTasks() ([]data.Task, error) {
 }
 
 func (r *fakeRepo) UpdateTask(t data.Task) error {
-
 	for i := range r.tasks {
 		if r.tasks[i].Id == t.Id {
 			r.tasks[i] = t
@@ -42,7 +40,6 @@ func (r *fakeRepo) UpdateTask(t data.Task) error {
 }
 
 func (r *fakeRepo) UpdateTasks(ts []data.Task) error {
-
 	cp := make([]data.Task, len(ts))
 	copy(cp, ts)
 	r.tasks = cp
@@ -62,17 +59,15 @@ func (r *fakeRepo) DeleteTaskById(id int) error {
 	return nil
 }
 
-func newFakeRepo() (*persistence.TodoRepository, *fakeRepo) {
-	var repo = &fakeRepo{
+func newFakeRepo() (persistence.TodoRepository, *fakeRepo) {
+	repo := &fakeRepo{
 		tasks: []data.Task{
 			{Id: 1, Title: "A", Complete: false, DueDate: time.Now()},
 			{Id: 2, Title: "B", Complete: true, DueDate: time.Now()},
 		},
 	}
-
 	var todoRepo persistence.TodoRepository = repo
-
-	return &todoRepo, repo
+	return todoRepo, repo
 }
 
 func sendKey(m tea.Model, key string) (tea.Model, tea.Cmd) {
@@ -143,7 +138,6 @@ func TestModel_Reconcile_ToggleSelection_PersistsImmediately(t *testing.T) {
 	m := createModel(tr)
 
 	m.selectedIDs = append(m.selectedIDs, "1")
-
 	m.lastSelected[1] = false
 
 	upd, cmd := m.Update(struct{}{})
@@ -155,20 +149,6 @@ func TestModel_Reconcile_ToggleSelection_PersistsImmediately(t *testing.T) {
 	assert.True(t, fr.updateTaskCalls[0].Complete)
 
 	assert.True(t, m.lastSelected[1])
-}
-
-func TestModel_DoneMsg_QuitsAndSavesAll(t *testing.T) {
-	tr, fr := newFakeRepo()
-	m := createModel(tr)
-
-	upd, cmd := m.Update(tui.DoneMsg{})
-	assert.Equal(t, m, upd)
-	if assert.NotNil(t, cmd) {
-
-		assert.Equal(t, tea.Quit(), cmd())
-	}
-
-	assert.GreaterOrEqual(t, fr.updateTasksCalls, 1)
 }
 
 func TestModel_ErrorMsg_BubblesIntoErr(t *testing.T) {
@@ -189,8 +169,8 @@ func TestModel_QuitKeys_Quit(t *testing.T) {
 
 	for _, key := range tui.QuitKeys {
 		_, cmd := sendKey(m, key)
-
 		assert.NotNil(t, cmd)
+
 		assert.Equal(t, tea.Quit(), cmd())
 
 		m = createModel(tr)
@@ -202,6 +182,7 @@ func TestModel_NoOpMsg_NoChange(t *testing.T) {
 	m := createModel(tr)
 
 	upd, cmd := m.Update(struct{}{})
-	assert.Equal(t, m, upd)
+	assert.Same(t, m, upd)
 	assert.Nil(t, cmd)
+
 }

@@ -9,99 +9,74 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/stretchr/testify/require"
 )
 
 type testModel struct{}
 
-func (testModel) Init() tea.Cmd { return nil }
-func (testModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg.(type) {
-	case DoneMsg:
-		return testModel{}, tea.Quit
-	default:
-		return testModel{}, nil
-	}
-}
-func (testModel) View() string { return "" }
+func (testModel) Init() tea.Cmd                           { return nil }
+func (testModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) { return testModel{}, nil }
+func (testModel) View() string                            { return "" }
 
-func newTestLoader(m tea.Model) *Runner {
+type quitOnInit struct{}
+
+func (quitOnInit) Init() tea.Cmd                           { return tea.Quit }
+func (quitOnInit) Update(msg tea.Msg) (tea.Model, tea.Cmd) { return quitOnInit{}, nil }
+func (quitOnInit) View() string                            { return "" }
+
+func newHeadlessRunner(m tea.Model) *Runner {
 	p := tea.NewProgram(
 		m,
+		tea.WithoutRenderer(),
 		tea.WithInput(bytes.NewBuffer(nil)),
 		tea.WithOutput(io.Discard),
 	)
-	ldr := &Runner{
+	r := &Runner{
 		program: p,
 		doneCh:  make(chan struct{}),
 	}
 	go func() {
-		_, err := ldr.program.Run()
-		ldr.runErr = err
-		close(ldr.doneCh)
+		_, err := r.program.Run()
+		r.Err = err
+		close(r.doneCh)
 	}()
-	return ldr
+	return r
 }
 
-func waitOrFail(t *testing.T, l *Runner, d time.Duration) error {
+func waitOrFail(t *testing.T, r *Runner, d time.Duration) error {
 	t.Helper()
-	done := make(chan error, 1)
-	go func() {
-		done <- l.Wait()
-	}()
 	select {
-	case err := <-done:
-		return err
 	case <-time.After(d):
-		t.Fatalf("timeout waiting for loader to finish")
+		t.Fatalf("timeout waiting for runner to finish")
 		return nil
-	}
-}
-
-func TestClose_Idempotent(t *testing.T) {
-	ldr := newTestLoader(testModel{})
-
-	ldr.Close()
-
-	if err := waitOrFail(t, ldr, 2*time.Second); err != nil {
-		t.Fatalf("unexpected error from Wait: %v", err)
+	case <-r.Done():
+		return r.Wait()
 	}
 }
 
 func TestWait_PropagatesRunErr(t *testing.T) {
-	ldr := &Runner{
-		doneCh: make(chan struct{}),
-	}
+	r := &Runner{doneCh: make(chan struct{})}
 	want := errors.New("boom")
-	ldr.runErr = want
-	close(ldr.doneCh)
+	r.Err = want
+	close(r.doneCh)
 
-	if got := ldr.Wait(); got != want {
-		t.Fatalf("Wait() = %v, want %v", got, want)
-	}
+	got := r.Wait()
+	require.Equal(t, want, got)
 }
 
-func TestHeadless_Close_ShutsDown(t *testing.T) {
-	ldr := newTestLoader(testModel{})
-	ldr.Close()
-
-	if err := waitOrFail(t, ldr, 2*time.Second); err != nil {
-		t.Fatalf("unexpected error from Wait: %v", err)
-	}
-}
-
-func TestHeadless_NewLoaderLike_ContextCancel(t *testing.T) {
+func TestHeadless_ContextCancel_StopsProgram(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	ldr := newTestLoader(testModel{})
+	r := newHeadlessRunner(testModel{})
 
 	done := make(chan struct{})
 	go func() {
 		select {
 		case <-ctx.Done():
-			ldr.Close()
-			_ = ldr.Wait()
-		case <-ldr.doneCh:
+			r.Stop()
+			_ = r.Wait()
+		case <-r.Done():
 		}
 		close(done)
 	}()
@@ -110,10 +85,42 @@ func TestHeadless_NewLoaderLike_ContextCancel(t *testing.T) {
 
 	select {
 	case <-done:
-		if err := waitOrFail(t, ldr, 2*time.Second); err != nil {
-			t.Fatalf("unexpected error from Wait: %v", err)
-		}
+		err := waitOrFail(t, r, 2*time.Second)
+		require.NoError(t, err, "unexpected error from Wait after Stop")
 	case <-time.After(2 * time.Second):
-		t.Fatalf("timeout waiting for NewLoader-like goroutine")
+		t.Fatalf("timeout waiting for cancel goroutine")
 	}
+}
+
+func TestStop_IsIdempotent(t *testing.T) {
+	r := newHeadlessRunner(testModel{})
+
+	r.Stop()
+	r.Stop()
+
+	err := waitOrFail(t, r, 2*time.Second)
+	require.NoError(t, err)
+}
+
+func TestProgram_ExitsCleanly_PropagatesNilErr(t *testing.T) {
+	r := newHeadlessRunner(quitOnInit{})
+
+	err := waitOrFail(t, r, 2*time.Second)
+	require.NoError(t, err)
+}
+
+func TestWait_BlocksUntilDone(t *testing.T) {
+	r := newHeadlessRunner(testModel{})
+
+	go func() {
+		time.Sleep(50 * time.Millisecond)
+		r.Stop()
+	}()
+
+	start := time.Now()
+	err := waitOrFail(t, r, 2*time.Second)
+	elapsed := time.Since(start)
+
+	require.NoError(t, err)
+	require.GreaterOrEqual(t, elapsed, 50*time.Millisecond, "Wait should block until Stop/Done")
 }

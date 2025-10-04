@@ -44,6 +44,7 @@ type TodoRepository interface {
 	UpdateTask(task data.Task) error
 	UpdateTasks(tasks []data.Task) error
 	DeleteTaskById(id int) error
+	Close() error
 }
 
 type SqlLiteTodoRepository struct {
@@ -162,7 +163,11 @@ func (t *SqlLiteTodoRepository) DeleteTaskById(id int) error {
 	return err
 }
 
-func NewTodoRepository() *TodoRepository {
+func (t *SqlLiteTodoRepository) Close() error {
+	return t.db.Close()
+}
+
+func NewTodoRepository() TodoRepository {
 	var repository TodoRepository = &SqlLiteTodoRepository{db: newDB()}
-	return &repository
+	return repository
 }
