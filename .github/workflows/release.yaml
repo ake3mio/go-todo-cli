@@ -8,6 +8,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  actions: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -47,7 +48,8 @@ jobs:
       - name: Install cross-compilers for Linux CGO
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-aarch64-linux-gnu libc6-dev-arm64-cross \
+          sudo apt-get install -y build-essential gcc-multilib \
+                                 gcc-aarch64-linux-gnu libc6-dev-arm64-cross \
                                  gcc-i686-linux-gnu libc6-dev-i386-cross
 
       - uses: goreleaser/goreleaser-action@v6
@@ -109,13 +111,15 @@ jobs:
           cache: true
 
       - name: Install MinGW for Windows CGO
-        shell: powershell
-        run: |
-          Set-ExecutionPolicy Bypass -Scope Process -Force
-          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
-          iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-          choco install mingw --yes
-          refreshenv
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-g++
+            mingw-w64-i686-gcc
+            mingw-w64-i686-g++
 
       - uses: goreleaser/goreleaser-action@v6
         with:
@@ -123,6 +127,7 @@ jobs:
           args: build --snapshot --id todo-windows
         env:
           CGO_ENABLED: "1"
+          PATH: "${{ env.PATH }};C:\\msys64\\mingw64\\bin;C:\\msys64\\mingw32\\bin"
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
