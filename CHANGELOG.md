@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/ake3mio/go-todo-cli/compare/v1.2.1...v1.2.2) (2025-10-05)
+
+
+### Bug Fixes
+
+* install gcc in the release workflow ([7b78676](https://github.com/ake3mio/go-todo-cli/commit/7b786765f122b86b9f3eabdcb8dfe79c77bf138a))
+
 ## [1.2.1](https://github.com/ake3mio/go-todo-cli/compare/v1.2.0...v1.2.1) (2025-10-05)
 
 
