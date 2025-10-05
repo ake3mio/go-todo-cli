@@ -7,6 +7,7 @@
 
 * aarch64 cgo ([#18](https://github.com/ake3mio/go-todo-cli/issues/18)) ([d180a75](https://github.com/ake3mio/go-todo-cli/commit/d180a7535fea541171df9bbbf00aecaf057fbfff))
 
+
 ## [1.2.2](https://github.com/ake3mio/go-todo-cli/compare/v1.2.1...v1.2.2) (2025-10-05)
 
 
