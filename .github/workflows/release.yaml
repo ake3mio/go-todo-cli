@@ -45,16 +45,14 @@ jobs:
           go-version: 'stable'
           cache: true
 
-      - name: Install cross-compilers for Linux CGO
+      - name: Install crossbuild essentials
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential gcc-multilib \
-                                 gcc-aarch64-linux-gnu libc6-dev-arm64-cross \
-                                 gcc-i686-linux-gnu libc6-dev-i386-cross
+          sudo apt-get install -y crossbuild-essential-arm64 crossbuild-essential-i386
 
       - uses: goreleaser/goreleaser-action@v6
         with:
-          version: latest
+          version: '~> v2'
           args: build --snapshot --id todo-linux
         env:
           CGO_ENABLED: "1"
@@ -83,7 +81,7 @@ jobs:
 
       - uses: goreleaser/goreleaser-action@v6
         with:
-          version: latest
+          version: '~> v2'
           args: build --snapshot --id todo-darwin
         env:
           CGO_ENABLED: "1"
@@ -115,17 +113,22 @@ jobs:
         with:
           msystem: MINGW64
           update: true
-          install: >-
+          install: >
             mingw-w64-x86_64-gcc
             mingw-w64-i686-gcc
 
+      - name: Add MinGW to PATH
+        shell: pwsh
+        run: |
+          echo "C:\msys64\mingw64\bin" >> $env:GITHUB_PATH
+          echo "C:\msys64\mingw32\bin" >> $env:GITHUB_PATH
+
       - uses: goreleaser/goreleaser-action@v6
         with:
-          version: latest
+          version: '~> v2'
           args: build --snapshot --id todo-windows
         env:
           CGO_ENABLED: "1"
-          PATH: "${{ env.PATH }};C:\\msys64\\mingw64\\bin;C:\\msys64\\mingw32\\bin"
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
@@ -151,7 +154,7 @@ jobs:
 
       - uses: goreleaser/goreleaser-action@v6
         with:
-          version: latest
+          version: '~> v2'
           args: release --skip-build --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
