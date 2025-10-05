@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/ake3mio/go-todo-cli/compare/v1.3.7...v1.4.0) (2025-10-05)
+
+
+### Features
+
+* clear screen at start of cli ([#30](https://github.com/ake3mio/go-todo-cli/issues/30)) ([cdf0899](https://github.com/ake3mio/go-todo-cli/commit/cdf0899b7ea54892575693fc01e6c4f828cb000f))
+
 ## [1.3.7](https://github.com/ake3mio/go-todo-cli/compare/v1.3.6...v1.3.7) (2025-10-05)
 
 
