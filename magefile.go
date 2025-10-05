@@ -15,7 +15,7 @@ import (
 var (
 	app    = env("APP", "todo")
 	pkg    = env("PKG", "main.go")
-	cgo    = env("CGO_ENABLED", "0") // pure-Go by default
+	cgo    = env("CGO_ENABLED", "1")
 	vers   = env("VERSION", "dev")
 	commit = env("COMMIT", shortCommit())
 )
