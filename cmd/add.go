@@ -2,19 +2,24 @@ package cmd
 
 import (
 	"github.com/ake3mio/go-todo-cli/internal/persistence"
+	"github.com/ake3mio/go-todo-cli/internal/tui"
 	"github.com/ake3mio/go-todo-cli/internal/tui/add"
 	"github.com/spf13/cobra"
 )
 
-// addCmd represents the add command
 var addCmd = &cobra.Command{
-	Use:   "add",
-	Short: "Add a task to do",
-	Run: func(cmd *cobra.Command, args []string) {
+	Use:        string(tui.AddTask),
+	Aliases:    nil,
+	SuggestFor: nil,
+	Short:      "Add a task to do",
+	Long: `
+Type the task name and due date, then press Enter to save it.
+Once the task is added, you’ll automatically return to the task list view.
+`,
+	RunE: func(cmd *cobra.Command, args []string) error {
 		repository := persistence.NewTodoRepository()
-		newAdd := add.NewAdd(repository)
-		defer newAdd.Close()
-		newAdd.Wait()
+		runner := add.NewAdd(repository)
+		return runner.Run(rootCmd)
 	},
 }
 

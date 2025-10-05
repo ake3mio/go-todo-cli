@@ -10,8 +10,7 @@ type Model interface {
 	Init() tea.Cmd
 	Update(tea.Msg) (tea.Model, tea.Cmd)
 	View() string
-	Quit() tea.Model
+	Cleanup()
 	Err() error
+	Next() Command
 }
-
-type DoneMsg struct{}
