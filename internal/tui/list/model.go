@@ -112,6 +112,7 @@ func (m *model) View() string {
 Special Shortcuts:
 ctrl + h - Toggle hiding completed tasks
 ctrl + a - Add a new task
+delete/backspace - Delete a selected task
 q/ctrl + c/esc - Quit
 `)
 }
