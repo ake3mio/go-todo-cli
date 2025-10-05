@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.2](https://github.com/ake3mio/go-todo-cli/compare/v1.3.1...v1.3.2) (2025-10-05)
+
+
+### Bug Fixes
+
+* Update release.yaml ([3914c6b](https://github.com/ake3mio/go-todo-cli/commit/3914c6bf705bb87f3f818d57705d09a16446d5bc))
+
 ## [1.3.1](https://github.com/ake3mio/go-todo-cli/compare/v1.3.0...v1.3.1) (2025-10-05)
 
 
