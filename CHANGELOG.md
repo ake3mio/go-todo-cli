@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.4](https://github.com/ake3mio/go-todo-cli/compare/v1.3.3...v1.3.4) (2025-10-05)
+
+
+### Bug Fixes
+
+* cgo releasing ([8e53850](https://github.com/ake3mio/go-todo-cli/commit/8e5385052e76f1d91451284849810abb83f4f3fe))
+
 ## [1.3.3](https://github.com/ake3mio/go-todo-cli/compare/v1.3.2...v1.3.3) (2025-10-05)
 
 
