@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"os"
+	"os/exec"
+	"runtime"
 
 	"github.com/ake3mio/go-todo-cli/internal/persistence"
 	"github.com/ake3mio/go-todo-cli/internal/tui/list"
@@ -22,6 +24,15 @@ View and manage tasks.
 }
 
 func Execute() {
+	var cmd *exec.Cmd
+	if runtime.GOOS == "windows" {
+		cmd = exec.Command("cmd", "/c", "cls")
+	} else {
+		cmd = exec.Command("clear")
+	}
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	_ = cmd.Run()
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
