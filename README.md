@@ -1,8 +1,10 @@
 # Go Todo CLI
+
 [GitHub Project](https://github.com/users/ake3mio/projects/6/views/1?pane=info)
 
-
-A command-line todo manager built with [Bubble Tea](https://github.com/charmbracelet/bubbletea), [Cobra](https://github.com/spf13/cobra), and [Huh](https://github.com/charmbracelet/huh).
+A command-line todo manager built
+with [Bubble Tea](https://github.com/charmbracelet/bubbletea), [Cobra](https://github.com/spf13/cobra),
+and [Huh](https://github.com/charmbracelet/huh).
 
 ---
 
@@ -19,7 +21,8 @@ A command-line todo manager built with [Bubble Tea](https://github.com/charmbrac
 
 Each view (`add`, `list`) implements the [`tui.Model`](./internal/tui/model.go) interface:
 
-The [`Runner`](./internal/tui/runner.go) orchestrates model lifecycles, manages cleanup, and handles transitions between commands.
+The [`Runner`](./internal/tui/runner.go) orchestrates model lifecycles, manages cleanup, and handles transitions between
+commands.
 
 - Uses **pointer receivers** for mutable Bubble Tea models
 - Each model is self-contained and exposes a `Cleanup()` method for resource management
@@ -32,27 +35,33 @@ The [`Runner`](./internal/tui/runner.go) orchestrates model lifecycles, manages 
 ## Usage
 
 ### View and Manage tasks
+
 ```bash
 todo
 ```
 
 From the list view, you can:
+
 - Toggle tasks as complete/incomplete
 - Delete a task
 - Switch back to the add view
 
 **Shortcuts**
+
 - `ctrl + h` - Toggle hiding completed tasks
 - `ctrl + a` - Add a new task
 - `delete/backspace` - Delete a selected task
 
 ---
+
 ### Add a Task
+
 ```bash
 todo add
 ```
 
 You’ll be prompted to enter:
+
 - **Task name**
 - **Due date (YYYY-MM-DD)**
 
@@ -60,6 +69,7 @@ Press **Enter** to save.
 After adding, you’ll be automatically taken to the task list view.
 
 **Shortcuts**
+
 - `ctrl + l` - Go to the list view
 
 ---
@@ -67,11 +77,13 @@ After adding, you’ll be automatically taken to the task list view.
 ## Autocompletion
 
 Enable Zsh autocompletion:
+
 ```bash
 source <(todo completion zsh)
 ```
 
 For Bash:
+
 ```bash
 source <(todo completion bash)
 ```
@@ -90,13 +102,11 @@ You can plug in a custom storage backend - file, Postgres, Redis, etc.
 
 This project uses [mage](https://github.com/magefile/mage) for build automation.
 
-
 ```bash
 # Standard build
 mage build
 
 ```
-
 
 ---
 
@@ -107,6 +117,29 @@ Run tests with:
 
 ```bash
 mage test
+```
+
+---
+
+## Installation notes
+
+The downloadable binaries on the release page are unsigned, so depending on your OS, you may need to allow the untrusted
+binary to run (after making the binary executable).
+
+If you want to skip all of this, you can build the binary yourself, by following the instructions [above](#building). 
+
+On OSX, this looks like:
+
+```bash
+
+# Make the binary executable
+chmod +x todo
+
+# remove Gatekeeper quarantine
+xattr -d com.apple.quarantine todo
+
+# (optional) verify the update
+spctl --assess --type execute -vv todo
 ```
 
 ---
@@ -126,6 +159,7 @@ mage test
 ```bash
 > todo
 ```
+
 1. ![Enter Task Name.png](docs/Enter%20Task%20Name.png)
 2. ![Enter Task Due Date.png](docs/Enter%20Task%20Due%20Date.png)
 3. ![Task List.png](docs/Task%20List.png)
