@@ -8,6 +8,8 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  # Added for artifact uploads/downloads
+  actions: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -29,7 +31,8 @@ jobs:
           release-type: go
           path: '.'
 
-  build-and-publish:
+  # Separate test job (optional; runs before builds if release_created)
+  test:
     needs: release-please
     if: needs.release-please.outputs.release_created == 'true'
     runs-on: ubuntu-latest
@@ -50,12 +53,128 @@ jobs:
       - name: Test
         run: mage test
 
-      - name: Run GoReleaser (attach artifacts to the Release)
-        uses: goreleaser/goreleaser-action@v6
+  build-linux:
+    needs: [release-please, test]  # Wait for release and tests
+    if: needs.release-please.outputs.release_created == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.release-please.outputs.tag_name }}
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 'stable'
+          cache: true
+
+      - name: Install cross-compilers for Linux CGO
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu libc6-dev-arm64-cross \
+                                 gcc-i686-linux-gnu libc6-dev-i386-cross
+
+      - uses: goreleaser/goreleaser-action@v6
         with:
           version: latest
-          distribution: goreleaser-cross
-          args: release --clean
+          args: build --snapshot --skip-publish
+        env:
+          CGO_ENABLED: "1"
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-linux
+          path: dist/
+          retention-days: 1  # Short retention since we merge immediately
+
+  build-darwin:
+    needs: [release-please, test]
+    if: needs.release-please.outputs.release_created == 'true'
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.release-please.outputs.tag_name }}
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 'stable'
+          cache: true
+
+      # macOS has native Clang for CGO; no extra installs needed
+
+      - uses: goreleaser/goreleaser-action@v6
+        with:
+          version: latest
+          args: build --snapshot --skip-publish
+        env:
+          CGO_ENABLED: "1"
+
+      - name: Upload Darwin artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-darwin
+          path: dist/
+          retention-days: 1
+
+  build-windows:
+    needs: [release-please, test]
+    if: needs.release-please.outputs.release_created == 'true'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.release-please.outputs.tag_name }}
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 'stable'
+          cache: true
+
+      - name: Install MinGW for Windows CGO
+        shell: powershell
+        run: |
+          Set-ExecutionPolicy Bypass -Scope Process -Force
+          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+          iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+          choco install mingw --yes
+          refreshenv
+
+      - uses: goreleaser/goreleaser-action@v6
+        with:
+          version: latest
+          args: build --snapshot --skip-publish
+        env:
+          CGO_ENABLED: "1"
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-windows
+          path: dist/
+          retention-days: 1
+
+  release:
+    needs: [build-linux, build-darwin, build-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.release-please.outputs.tag_name }}
+
+      - name: Download and merge artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist/
+          merge-multiple: true  # Combines all dist-* folders into one dist/
+
+      - uses: goreleaser/goreleaser-action@v6
+        with:
+          version: latest
+          args: release --skip-build --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-          CGO_ENABLED: "1"
