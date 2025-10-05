@@ -7,10 +7,9 @@ before:
     - go generate ./...
 
 builds:
-  - id: todo
+  - id: todo-linux
     env:
       - CGO_ENABLED=1
-
     main: ./main.go
     binary: todo
     flags:
@@ -21,15 +20,68 @@ builds:
       - -X main.commit={{.Commit}}
     goos:
       - linux
-      - windows
-      - darwin
     goarch:
       - amd64
       - arm64
       - 386
+    overrides:
+      - goarch: amd64
+        env:
+          - CC=gcc
+          - CXX=g++
+      - goarch: arm64
+        env:
+          - CC=aarch64-linux-gnu-gcc
+          - CXX=aarch64-linux-gnu-g++
+      - goarch: 386
+        env:
+          - CC=i686-linux-gnu-gcc
+          - CXX=i686-linux-gnu-g++
+
+  - id: todo-darwin
+    env:
+      - CGO_ENABLED=1
+    main: ./main.go
+    binary: todo
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+    goos:
+      - darwin
+    goarch:
+      - amd64
+      - arm64
     ignore:
-      - goos: darwin
-        goarch: 386
+      - goarch: 386
+
+  - id: todo-windows
+    env:
+      - CGO_ENABLED=1
+    main: ./main.go
+    binary: todo
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+    goos:
+      - windows
+    goarch:
+      - amd64
+      - 386
+    overrides:
+      - goarch: amd64
+        env:
+          - CC=x86_64-w64-mingw32-gcc
+          - CXX=x86_64-w64-mingw32-g++
+      - goarch: 386
+        env:
+          - CC=i686-w64-mingw32-gcc
+          - CXX=i686-w64-mingw32-g++
 
 checksum:
   name_template: >-
@@ -46,7 +98,6 @@ checksum:
 archives:
   - id: default
     formats: [ tar.gz ]
-
     name_template: >-
       todo_
       {{- title .Os }}_

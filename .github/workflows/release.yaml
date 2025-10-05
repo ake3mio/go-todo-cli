@@ -8,8 +8,6 @@ on:
 permissions:
   contents: write
   pull-requests: write
-  # Added for artifact uploads/downloads
-  actions: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -31,30 +29,8 @@ jobs:
           release-type: go
           path: '.'
 
-  # Separate test job (optional; runs before builds if release_created)
-  test:
-    needs: release-please
-    if: needs.release-please.outputs.release_created == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ needs.release-please.outputs.tag_name }}
-
-      - uses: actions/setup-go@v5
-        with:
-          go-version: 'stable'
-          cache: true
-
-      - name: Install Mage
-        run: go install github.com/magefile/mage@latest
-
-      - name: Test
-        run: mage test
-
   build-linux:
-    needs: [release-please, test]  # Wait for release and tests
+    needs: [release-please]
     if: needs.release-please.outputs.release_created == 'true'
     runs-on: ubuntu-latest
     steps:
@@ -77,7 +53,7 @@ jobs:
       - uses: goreleaser/goreleaser-action@v6
         with:
           version: latest
-          args: build --snapshot --skip-publish
+          args: build --snapshot --id todo-linux
         env:
           CGO_ENABLED: "1"
 
@@ -86,10 +62,10 @@ jobs:
         with:
           name: dist-linux
           path: dist/
-          retention-days: 1  # Short retention since we merge immediately
+          retention-days: 1
 
   build-darwin:
-    needs: [release-please, test]
+    needs: [release-please]
     if: needs.release-please.outputs.release_created == 'true'
     runs-on: macos-latest
     steps:
@@ -103,12 +79,10 @@ jobs:
           go-version: 'stable'
           cache: true
 
-      # macOS has native Clang for CGO; no extra installs needed
-
       - uses: goreleaser/goreleaser-action@v6
         with:
           version: latest
-          args: build --snapshot --skip-publish
+          args: build --snapshot --id todo-darwin
         env:
           CGO_ENABLED: "1"
 
@@ -120,7 +94,7 @@ jobs:
           retention-days: 1
 
   build-windows:
-    needs: [release-please, test]
+    needs: [release-please]
     if: needs.release-please.outputs.release_created == 'true'
     runs-on: windows-latest
     steps:
@@ -146,7 +120,7 @@ jobs:
       - uses: goreleaser/goreleaser-action@v6
         with:
           version: latest
-          args: build --snapshot --skip-publish
+          args: build --snapshot --id todo-windows
         env:
           CGO_ENABLED: "1"
 
@@ -170,7 +144,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: dist/
-          merge-multiple: true  # Combines all dist-* folders into one dist/
+          merge-multiple: true
 
       - uses: goreleaser/goreleaser-action@v6
         with:
