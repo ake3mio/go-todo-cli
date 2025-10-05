@@ -50,17 +50,11 @@ jobs:
       - name: Test
         run: mage test
 
-      - name: Install C toolchains for CGO
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential \
-            gcc-aarch64-linux-gnu libc6-dev-arm64-cross \
-            gcc-i686-linux-gnu libc6-dev-i386-cross
-
       - name: Run GoReleaser (attach artifacts to the Release)
         uses: goreleaser/goreleaser-action@v6
         with:
           version: latest
+          distribution: goreleaser-cross
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
