@@ -95,8 +95,6 @@ This project uses [mage](https://github.com/magefile/mage) for build automation.
 # Standard build
 mage build
 
-# Cross-compile for Linux, Windows, and macOS
-mage release 
 ```
 
 

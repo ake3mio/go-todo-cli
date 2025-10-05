@@ -1,14 +1,12 @@
 name: Release Pipeline
 
 on:
-  workflow_dispatch:
   push:
     branches: [ main ]
 
 permissions:
   contents: write
   pull-requests: write
-  actions: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -30,131 +28,33 @@ jobs:
           release-type: go
           path: '.'
 
-  build-linux:
-    needs: [release-please]
+  build-and-publish:
+    needs: release-please
     if: needs.release-please.outputs.release_created == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout tagged release
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: ${{ needs.release-please.outputs.tag_name }}
 
-      - uses: actions/setup-go@v5
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
           go-version: 'stable'
           cache: true
 
-      - name: Install crossbuild essentials
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y crossbuild-essential-arm64 crossbuild-essential-i386
+      - name: Install Mage
+        run: go install github.com/magefile/mage@latest
 
-      - uses: goreleaser/goreleaser-action@v6
+      - name: Test
+        run: mage test
+
+      - name: Run GoReleaser (attach artifacts to the Release)
+        uses: goreleaser/goreleaser-action@v6
         with:
-          version: '~> v2'
-          args: build --snapshot --id todo-linux
-        env:
-          CGO_ENABLED: "1"
-
-      - name: Upload Linux artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist-linux
-          path: dist/
-          retention-days: 1
-
-  build-darwin:
-    needs: [release-please]
-    if: needs.release-please.outputs.release_created == 'true'
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ needs.release-please.outputs.tag_name }}
-
-      - uses: actions/setup-go@v5
-        with:
-          go-version: 'stable'
-          cache: true
-
-      - uses: goreleaser/goreleaser-action@v6
-        with:
-          version: '~> v2'
-          args: build --snapshot --id todo-darwin
-        env:
-          CGO_ENABLED: "1"
-
-      - name: Upload Darwin artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist-darwin
-          path: dist/
-          retention-days: 1
-
-  build-windows:
-    needs: [release-please]
-    if: needs.release-please.outputs.release_created == 'true'
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ needs.release-please.outputs.tag_name }}
-
-      - uses: actions/setup-go@v5
-        with:
-          go-version: 'stable'
-          cache: true
-
-      - name: Install MinGW for Windows CGO
-        uses: msys2/setup-msys2@v2
-        with:
-          msystem: MINGW64
-          update: true
-          install: >
-            mingw-w64-x86_64-gcc
-            mingw-w64-i686-gcc
-
-      - name: Add MinGW to PATH
-        shell: pwsh
-        run: |
-          echo "C:\msys64\mingw64\bin" >> $env:GITHUB_PATH
-          echo "C:\msys64\mingw32\bin" >> $env:GITHUB_PATH
-
-      - uses: goreleaser/goreleaser-action@v6
-        with:
-          version: '~> v2'
-          args: build --snapshot --id todo-windows
-        env:
-          CGO_ENABLED: "1"
-
-      - name: Upload Windows artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist-windows
-          path: dist/
-          retention-days: 1
-
-  release:
-    needs: [build-linux, build-darwin, build-windows]
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ needs.release-please.outputs.tag_name }}
-
-      - name: Download and merge artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: dist/
-          merge-multiple: true
-
-      - uses: goreleaser/goreleaser-action@v6
-        with:
-          version: '~> v2'
-          args: release --skip-build --clean
+          version: latest
+          args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}

@@ -9,7 +9,8 @@ import (
 	"time"
 
 	"github.com/ake3mio/go-todo-cli/internal/data"
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/ncruces/go-sqlite3/driver"
+	_ "github.com/ncruces/go-sqlite3/embed"
 )
 
 //go:embed schema.sql
