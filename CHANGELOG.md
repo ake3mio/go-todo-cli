@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/ake3mio/go-todo-cli/compare/v1.1.0...v1.2.0) (2025-10-05)
+
+
+### Features
+
+* list tasks and manage task completion ([#11](https://github.com/ake3mio/go-todo-cli/issues/11)) ([0f178c9](https://github.com/ake3mio/go-todo-cli/commit/0f178c90a16ea0e46a42b69b7785494b98eb98ee))
+
 ## [1.1.0](https://github.com/ake3mio/go-todo-cli/compare/v1.0.0...v1.1.0) (2025-09-28)
 
 
