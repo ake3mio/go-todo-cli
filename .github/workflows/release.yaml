@@ -51,6 +51,10 @@ jobs:
       - name: Test
         run: mage test
 
+      - name: GCC multilib
+        run: |
+          sudo apt-get install gcc-multilib g++-multilib
+
       - name: Run GoReleaser (attach artifacts to the Release)
         uses: goreleaser/goreleaser-action@v6
         with:
